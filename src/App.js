@@ -24,9 +24,18 @@ const App = () => {
                         </Routes>
                     </div>
                 </Layout>
-            </div>
-            <div className='footer'>
-
+            
+                <div className='footer'>
+                    <Typography.Title level={5} style={{color: 'white', textAlign: 'center'}}>
+                        Crypto Market <br />
+                        All Rights Reserved 2022
+                    </Typography.Title>
+                    <Space>
+                        <Link to='/'>Home</Link>
+                        <Link to='/'>Exchanges</Link>
+                        <Link to='/'>News</Link>
+                    </Space>
+                </div>
             </div>
         </div>
     )
