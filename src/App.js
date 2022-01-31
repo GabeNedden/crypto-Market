@@ -4,7 +4,7 @@ import { Layout, Typography, Space } from 'antd';
 
 import './App.css'
 
-import { Navbar, Homepage, Cryptocurrencies, News, CryptoDetails } from './components';
+import { Cryptocurrencies, CryptoDetails, Homepage, Login, Navbar, News, Register } from './components';
 
 const App = () => {
     return (
@@ -20,6 +20,8 @@ const App = () => {
                             <Route exact path='/cryptocurrencies' element={<Cryptocurrencies />} />
                             <Route exact path='/crypto/:coinId' element={<CryptoDetails />} />
                             <Route exact path='/news' element={<News />} />
+                            <Route exact path='/register' element={<Register />} />
+                            <Route exact path='/login' element={<Login />} />
                         </Routes>
                     </div>
                 </Layout>
