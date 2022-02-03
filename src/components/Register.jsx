@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { Form, Input, Checkbox, Button } from 'antd';
+import { useNavigate } from "react-router-dom";
+import { Alert, Form, Input, Checkbox, Button } from 'antd';
 import gql from 'graphql-tag';
 import { useMutation } from '@apollo/react-hooks';
 
-
 const Register = () => {
 
-  const [form] = Form.useForm();
+  let navigate = useNavigate(); 
+  const routeChange = () =>{ 
+    let path = `/`; 
+    navigate(path);
+  }
 
+  const [form] = Form.useForm();
+  const [errors, setErrors] = useState({});
   const [values, setValues] = useState({
     username: '',
     email: '',
@@ -19,11 +25,12 @@ const Register = () => {
     setValues({...values, [event.target.name]: event.target.value});
   };
 
-
-
   const [addUser, { loading }] = useMutation(REGISTER_USER, {
-    update(proxy, result){
-      console.log(result)
+    update(_, result){
+      routeChange();
+    },
+    onError(err){
+      setErrors(err.graphQLErrors[0].extensions.exception.errors)
     },
     variables: values
   })
@@ -40,12 +47,12 @@ const Register = () => {
       labelCol={{ span: 8 }}
       wrapperCol={{ span: 16 }}
       layout='vertical'
-      className='form'
       form={form}
       name="register"
       onFinish={onSubmit}
       initialValues={{}}
       scrollToFirstError
+      extra='test'
     >
 
     <Form.Item
@@ -54,9 +61,20 @@ const Register = () => {
       value={values.username}
       onChange={onChange}
       tooltip="What do you want others to call you?"
-      rules={[{ required: true, message: 'Please input your nickname!', whitespace: true }]}
+      rules={[
+        { required: true, message: 'Please input your nickname!', whitespace: true },
+        ({ getFieldValue }) => ({
+          validator(_, value) {
+            if ( value.length < 16) {
+              return Promise.resolve();
+            }
+            return Promise.reject(new Error('Nickname cannot exceed 16 characters'));
+          },
+        }),
+      ]}
+
     >
-      <Input />
+      <Input name='username' />
     </Form.Item>
 
     <Form.Item
@@ -75,7 +93,7 @@ const Register = () => {
         },
       ]}
     >
-      <Input />
+      <Input name='email'/>
     </Form.Item>
 
     <Form.Item
@@ -91,7 +109,7 @@ const Register = () => {
       ]}
       hasFeedback
     >
-      <Input.Password />
+      <Input.Password name='password'/>
     </Form.Item>
 
     <Form.Item
@@ -112,11 +130,11 @@ const Register = () => {
               return Promise.resolve();
             }
             return Promise.reject(new Error('The two passwords that you entered do not match!'));
-          },
-        }),
+          }
+        })
       ]}
     >
-      <Input.Password />
+      <Input.Password name='confirmPassword'/>
     </Form.Item>
 
     <Form.Item
@@ -136,10 +154,19 @@ const Register = () => {
     </Form.Item>
 
     <Form.Item >
-      <Button type="primary" htmlType="submit">
+      <Button loading={loading} type="primary" htmlType="submit">
         Register
       </Button>
     </Form.Item>
+
+    {Object.keys(errors).length > 0 &&(
+      <Alert
+      message="Error"
+      description={Object.values(errors)}
+      type="error"
+      showIcon
+    />
+    )}
 
   </Form>
   </div>
@@ -148,28 +175,27 @@ const Register = () => {
 };
 
 const REGISTER_USER = gql`
-  mutation register (
-    $username: String!
-    $email: String!
-    $password: String!
-    $confirmPassword: String!
-  ) {
-    register(
-      registerInput: {
-        username: $username
-        email: $email
-        password: $password
-        confirmPassword: $confirmPassword
-      }
-    ){
-      id
-      username
-      email
-      token
-    }
-  }
-    
-  
-`
+        mutation register(
+            $username: String!
+            $email: String!
+            $password: String!
+            $confirmPassword: String!
+        ) {
+            register(
+                registerInput: {
+                    username: $username
+                    email: $email
+                    password: $password
+                    confirmPassword: $confirmPassword
+                }
+            ){
+                id
+                email
+                username
+                createdAt
+                token
+            }
+        }
+    `
 
 export default Register;

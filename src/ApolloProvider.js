@@ -6,7 +6,7 @@ import { createHttpLink } from 'apollo-link-http';
 import { ApolloProvider } from '@apollo/react-hooks';
 
 const httpLink = createHttpLink({
-    uri: 'https://g-task.herokuapp.com/'
+    uri: 'https://gmarketserver.herokuapp.com/'
 });
 
 const client = new ApolloClient({
