@@ -4,7 +4,7 @@ import { Layout, Typography, Space } from 'antd';
 
 import './App.css'
 
-import { Cryptocurrencies, CryptoDetails, Homepage, Login, Navbar, News, Register } from './components';
+import { Cryptocurrencies, CryptoDetails, Homepage, Login, MyAccount, Navbar, News, Register, UserAccount } from './components';
 import { AuthProvider } from './context/auth';
 
 
@@ -25,6 +25,8 @@ const App = () => {
                             <Route exact path='/news' element={<News />} />
                             <Route exact path='/register' element={<Register />} />
                             <Route exact path='/login' element={<Login />} />
+                            <Route exact path='/myaccount/:userId' element={<MyAccount />} />
+                            <Route exact path='/useraccount/:userId' element={<UserAccount />} />
                         </Routes>
                     </div>
                 </Layout>

@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useContext } from 'react'
 import { Avatar, Button, Menu, Typography } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HomeOutlined, MoneyCollectOutlined, BulbOutlined, FundOutlined, MenuOutlined, UserAddOutlined, UserOutlined } from '@ant-design/icons';
 import icon from '../images/cryptocurrency.png';
 
@@ -27,6 +27,12 @@ const Navbar = () => {
         }
     }, [screenSize]);
 
+    const navigate = useNavigate();
+    const logoutHome = () => {
+      logout();
+      navigate('/');
+    }
+
     const nav = user ? (
       <div className="nav-container">
           <div className="logo-container">
@@ -46,9 +52,9 @@ const Navbar = () => {
               <Link to="/news">News</Link>
             </Menu.Item>
             <Menu.Item key="4" icon={<UserOutlined />}>
-              <Link to="/">{user.username}</Link>
+              <Link to={`/myaccount/${user.id}`} >{user.username}</Link>
             </Menu.Item>
-            <Menu.Item key="5" onClick={logout} icon={<MoneyCollectOutlined />}>
+            <Menu.Item key="5" onClick={logoutHome} icon={<MoneyCollectOutlined />}>
               Logout
             </Menu.Item>
           </Menu>
