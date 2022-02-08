@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Alert, Form, Input, Button } from 'antd';
 import gql from 'graphql-tag';
 import { useMutation } from '@apollo/react-hooks';
 
+import { AuthContext } from '../context/auth';
+
 const Login = () => {
+  const context = useContext(AuthContext)
 
   let navigate = useNavigate(); 
   const routeChange = () =>{ 
@@ -25,8 +28,8 @@ const Login = () => {
   };
 
   const [loginUser, { loading }] = useMutation(LOGIN_USER, {
-    update(_, result) {
-      console.log(result)
+    update(_, {data: { login: userData}}) {
+      context.login(userData)
       routeChange();
     },
     onError(err) {

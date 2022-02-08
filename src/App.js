@@ -5,9 +5,12 @@ import { Layout, Typography, Space } from 'antd';
 import './App.css'
 
 import { Cryptocurrencies, CryptoDetails, Homepage, Login, Navbar, News, Register } from './components';
+import { AuthProvider } from './context/auth';
+
 
 const App = () => {
     return (
+    <AuthProvider>
         <div className='app'>
             <div className='navbar'>
                 <Navbar />
@@ -38,6 +41,7 @@ const App = () => {
                 </div>
             </div>
         </div>
+    </AuthProvider>
     )
 }
 
