@@ -15,6 +15,8 @@ const Homepage = () => {
 
     if(isFetching) return <Loader />
 
+    //add getUsers to wake DB early
+
     return (
         <>
         <Title level={2} className='heading'>Global Crypto Stats</Title>

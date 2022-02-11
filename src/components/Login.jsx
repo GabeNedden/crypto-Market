@@ -15,7 +15,6 @@ const Login = () => {
     navigate(path);
   }
 
-  const [form] = Form.useForm();
   const [errors, setErrors] = useState({});
   const [values, setValues] = useState({
     username: '',
