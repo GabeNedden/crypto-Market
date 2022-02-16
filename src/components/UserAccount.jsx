@@ -5,7 +5,7 @@ import { useQuery } from '@apollo/react-hooks';
 import { AuthContext } from '../context/auth';
 import { Typography } from 'antd';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 const UserAccount = () => {
   const { user } = useContext(AuthContext);

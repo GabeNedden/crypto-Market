@@ -113,6 +113,12 @@ mutation login(
     id
     email
     username
+    cash
+    portfolio{
+      name
+      symbol
+      quantity
+    }
     token
   }
 }

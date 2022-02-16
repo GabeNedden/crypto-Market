@@ -1,45 +1,40 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useContext } from 'react';
 import { AuthContext } from '../context/auth';
 import gql from 'graphql-tag';
-import { useQuery } from '@apollo/react-hooks';
+import { useMutation, useQuery } from '@apollo/react-hooks';
 import { Col, Space, Table, Tag, Typography } from 'antd';
-import BuySellModal from './BuySellModal';
+import BuySellDrawer from './BuySellDrawer';
 
 import Loader from '../components/Loader';
 import { useGetCoinsQuery } from '../services/cryptoApi';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 const MyAccount = () => {
     const { user } = useContext(AuthContext);
-    const { userId } = useParams();
-
-    let navigate = useNavigate();
-
-    useEffect(() => {
-        if(user){
-            if(user.id !== userId){
-                navigate(`/useraccount/${user.id}`)
-            }
-        } else {
-            navigate(`/login`)
-        }
-    })
-
+    const userId = user.id;
+    
     const { data: { getUser, loading } = {} } = useQuery(FETCH_USER_QUERY, { variables: { userId }});
     const { data: cryptosList, isFetching } = useGetCoinsQuery(100);
 
-    const [coins, setCoins] = useState([]);
-    const [cryptos, setCryptos] = useState([]);
+    const [updatePortfolio] = useMutation(UPDATE_PORTFOLIO_MUTATION, {
+      variables: {
+          userId: userId,
+          cash: "999",
+          name: "Ethereum",
+          symbol: "ETH",
+          quantity: "12",
+          averagePrice: "28000"
+      }
+    });
 
-    if(isFetching || loading) return <Loader />;
-
-    console.log(getUser)
+    if(isFetching || loading || !getUser) return <Loader />;
 
     const data = []
+
     for (const coin of getUser.portfolio) {
         const cryptoData = cryptosList?.data?.coins.filter((crypto) => crypto.name.toLowerCase() === coin.name.toLowerCase());
+        console.log(cryptoData)
         const pAndL = `${parseFloat((coin.averagePrice - cryptoData[0].price) * coin.quantity).toFixed(2)} (${parseFloat((((coin.averagePrice - cryptoData[0].price) * coin.quantity)/coin.averagePrice)*100).toFixed(2)}%)`
         let temp = {
             key: coin.name,
@@ -50,7 +45,8 @@ const MyAccount = () => {
             profitloss: pAndL,
             currentPrice: parseFloat(cryptoData[0].price).toFixed(2),
             "24hrChange": cryptoData[0].change,
-            tags: ['cool']
+            tags: [coin.name.length > 7 ? 'fresh' : 'cool'],
+            cryptoData
         }
         data.push(temp)
     }
@@ -104,7 +100,7 @@ const MyAccount = () => {
                   color = 'volcano';
                 }
                 return (
-                  <Tag color={'purple'} key={tag}>
+                  <Tag color={color} key={tag}>
                     {tag.toUpperCase()}
                   </Tag>
                 );
@@ -117,21 +113,21 @@ const MyAccount = () => {
           key: 'action',
           render: (text, record) => (
             <Space size="middle">
-                <BuySellModal title='Buy' buttonType="primary" name='Bitcoin'/>
-                <BuySellModal title='Sell' buttonType="" name='Bitcoin'/>
+                <BuySellDrawer crypto={record.cryptoData} title='Buy' buttonType="primary" name={record.name} />
+                <BuySellDrawer crypto={record.cryptoData} title='Sell' buttonType="" name={record.name} />
             </Space>
           ),
         },
       ];
 
-    const accountPage = user.id === userId ? (
+    const accountPage = user ? (
         <Col className="coin-heading-container">
-        <Title level={2} className="coin-name">
-           Welcome back, {user.username}
-        </Title>
-        <p>Head to the Cryptocurrencies tab to find new Coins to Buy</p>
-        <Table style={{width: "100%"}} columns={columns} dataSource={data} />
-      </Col>
+          <Title level={2} className="coin-name">
+            Welcome back, {user.username}
+          </Title>
+          <p>Head to the Cryptocurrencies tab to find new Coins to Buy</p>
+          <Table style={{width: "100%"}} columns={columns} dataSource={data} />
+        </Col>
     ) :
     (
         <Title>You are not authorized to view this page</Title>
@@ -147,7 +143,8 @@ const FETCH_USER_QUERY = gql `
     email
     createdAt
     username
-    portfolio {
+    cash
+    portfolio{
       name
       symbol
       quantity
@@ -156,5 +153,36 @@ const FETCH_USER_QUERY = gql `
   }
 }
 `
+const UPDATE_PORTFOLIO_MUTATION = gql `
+        mutation updatePortfolio(
+          $userId: ID!
+          $cash: String
+          $name: String
+          $symbol: String
+          $quantity: String
+          $averagePrice: String
+          ) {
+          updatePortfolio(
+            userId: $userId
+            cash: $cash
+            stockInput: {
+              name: $name
+              symbol: $symbol
+              quantity: $quantity
+              averagePrice: $averagePrice
+            }
+            ) {
+            username
+            cash
+            portfolio {
+              name
+              symbol
+              quantity
+              averagePrice
+            }
+          }
+        }
+      `
+
 
 export default MyAccount;

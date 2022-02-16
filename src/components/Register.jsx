@@ -197,6 +197,12 @@ const REGISTER_USER = gql`
                 email
                 username
                 createdAt
+                cash
+                portfolio{
+                  name
+                  symbol
+                  quantity
+                }
                 token
             }
         }
