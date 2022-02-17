@@ -56,7 +56,6 @@ const Register = () => {
       onFinish={onSubmit}
       initialValues={{}}
       scrollToFirstError
-      extra='test'
     >
 
     <Form.Item

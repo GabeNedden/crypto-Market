@@ -34,7 +34,6 @@ const MyAccount = () => {
 
     for (const coin of getUser.portfolio) {
         const cryptoData = cryptosList?.data?.coins.filter((crypto) => crypto.name.toLowerCase() === coin.name.toLowerCase());
-        console.log(cryptoData)
         const pAndL = `${parseFloat((coin.averagePrice - cryptoData[0].price) * coin.quantity).toFixed(2)} (${parseFloat((((coin.averagePrice - cryptoData[0].price) * coin.quantity)/coin.averagePrice)*100).toFixed(2)}%)`
         let temp = {
             key: coin.name,
@@ -46,7 +45,8 @@ const MyAccount = () => {
             currentPrice: parseFloat(cryptoData[0].price).toFixed(2),
             "24hrChange": cryptoData[0].change,
             tags: [coin.name.length > 7 ? 'fresh' : 'cool'],
-            cryptoData
+            cryptoData,
+            coin
         }
         data.push(temp)
     }
@@ -113,8 +113,8 @@ const MyAccount = () => {
           key: 'action',
           render: (text, record) => (
             <Space size="middle">
-                <BuySellDrawer crypto={record.cryptoData} title='Buy' buttonType="primary" name={record.name} />
-                <BuySellDrawer crypto={record.cryptoData} title='Sell' buttonType="" name={record.name} />
+                <BuySellDrawer userDetails={getUser} portfolio={record.coin} crypto={record.cryptoData} title='Buy' buttonType="primary" name={record.name} />
+                <BuySellDrawer userDetails={getUser} portfolio={record.coin} crypto={record.cryptoData} title='Sell' buttonType="" name={record.name} />
             </Space>
           ),
         },
@@ -126,6 +126,7 @@ const MyAccount = () => {
             Welcome back, {user.username}
           </Title>
           <p>Head to the Cryptocurrencies tab to find new Coins to Buy</p>
+          <p>{`You currently have $${getUser.cash} in your account`}</p>
           <Table style={{width: "100%"}} columns={columns} dataSource={data} />
         </Col>
     ) :
