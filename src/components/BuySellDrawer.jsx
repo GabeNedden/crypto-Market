@@ -4,9 +4,8 @@ import { useMutation } from '@apollo/react-hooks';
 import gql from 'graphql-tag';
 import { Avatar, Button, Col, Drawer, Divider, Form, Input, Radio, Row, Typography } from 'antd';
 import { useGetCryptoDetailsQuery } from '../services/cryptoApi';
-import {  DollarOutlined, MinusCircleOutlined, PicLeftOutlined, PlusCircleOutlined, UserOutlined } from '@ant-design/icons'
+import {  DollarOutlined, MinusCircleOutlined, PlusCircleOutlined, UserOutlined } from '@ant-design/icons'
 import Loader from './Loader';
-import MyInput from './MyInput';
 
 const BuySellDrawer = (props) => {
     const { user } = useContext(AuthContext);
@@ -23,22 +22,22 @@ const BuySellDrawer = (props) => {
     const [values, setValues] = useState({
         action: '',
         price: '',
-        quantity: '',
-        cash: '20000'
+        quantity: ''
     });
 
     const onChange = (event) => {
         setValues({...values, [event.target.name]: event.target.value});
+        console.log(values)
     };
 
     const [updatePortfolio] = useMutation(UPDATE_PORTFOLIO_MUTATION, {
         variables: {
             userId: userId,
-            cash: values.cash,
-            quantity: values.quantity,
+            action: values.action,
             name: props.portfolio.name,
             symbol: props.portfolio.symbol,
-            averagePrice: props.portfolio.averagePrice
+            quantity: values.quantity,
+            price: values.price
         }
       });
 
@@ -108,15 +107,22 @@ const BuySellDrawer = (props) => {
                     form={form}
                     name="order"
                     onFinish={onSubmit}
-                    initialValues={{price: parseFloat(cryptoDetails.price).toFixed(2), cash: userDetails.cash}}
+                    initialValues={{
+                        price: parseFloat(cryptoDetails.price).toFixed(2), 
+                        cash: userDetails.cash,
+                        action: props.title
+                    }}
                     scrollToFirstError
                     style={{width: '100%'}}
                     >
 
                     <Form.Item
-                    
+                        name='action'
+                        label='Price'
+                        value={values.price}
+                        onChange={onChange}
                     >
-                    <Radio.Group value={values.action} name='action' onChange={onChange} defaultValue={props.title} buttonStyle="solid">
+                    <Radio.Group value={values.action} name='action' onChange={onChange} buttonStyle="solid">
                         <Radio.Button value='Buy'>
                             Buy
                         </Radio.Button>
@@ -133,6 +139,16 @@ const BuySellDrawer = (props) => {
                         onChange={onChange}
                         onClick={onChange}
                         tooltip="Beware the delay from the Coinranking API"
+                        rules={[
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                if (parseFloat(getFieldValue('price')) >= parseFloat(cryptoDetails.price).toFixed(2)) {
+                                  return Promise.resolve();
+                                }
+                                return Promise.reject(new Error(`Sorry, the price of ${cryptoDetails.name} is ${parseFloat(cryptoDetails.price).toFixed(2)}`));
+                              },
+                            })
+                        ]}
                     >
                     <Input 
                         addonBefore={<DollarOutlined />}
@@ -149,7 +165,7 @@ const BuySellDrawer = (props) => {
                     >
                     <Input 
                         name='quantity'
-                        addonBefore={values.action == 'Buy' ? <PlusCircleOutlined /> : <MinusCircleOutlined />}
+                        addonBefore={values.action === 'Buy' ? <PlusCircleOutlined /> : <MinusCircleOutlined />}
                         style={{width: '100%'}}
                         />
                     </Form.Item>
@@ -190,20 +206,20 @@ const BuySellDrawer = (props) => {
 const UPDATE_PORTFOLIO_MUTATION = gql `
         mutation updatePortfolio(
           $userId: ID!
-          $cash: String
+          $action: String
           $name: String
           $symbol: String
           $quantity: String
-          $averagePrice: String
+          $price: String
           ) {
           updatePortfolio(
             userId: $userId
-            cash: $cash
             stockInput: {
+              action: $action
               name: $name
               symbol: $symbol
               quantity: $quantity
-              averagePrice: $averagePrice
+              price: $price
             }
             ) {
             username
