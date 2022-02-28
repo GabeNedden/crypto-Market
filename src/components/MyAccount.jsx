@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../context/auth';
 import gql from 'graphql-tag';
-import { useMutation, useQuery } from '@apollo/react-hooks';
-import { Col, Space, Table, Tag, Typography } from 'antd';
+import { useQuery } from '@apollo/react-hooks';
+import { Button, Col, Space, Result, Table, Tag, Typography } from 'antd';
 import BuySellDrawer from './BuySellDrawer';
 
 import Loader from '../components/Loader';
@@ -14,23 +14,15 @@ const MyAccount = () => {
     const { user } = useContext(AuthContext);
     const userId = user.id;
     
-    const { data: { getUser, loading } = {} } = useQuery(FETCH_USER_QUERY, { variables: { userId }});
     const { data: cryptosList, isFetching } = useGetCoinsQuery(100);
+    const { data: { getUser } = {} } = useQuery(FETCH_USER_QUERY, { variables: { userId }});
 
-    const [updatePortfolio] = useMutation(UPDATE_PORTFOLIO_MUTATION, {
-      variables: {
-          userId: userId,
-          cash: "999",
-          name: "Ethereum",
-          symbol: "ETH",
-          quantity: "12",
-          averagePrice: "28000"
-      }
-    });
+    if(isFetching || !getUser){
+       return <Loader />;
+    } else {
+      const { username, cash } = getUser;
 
-    if(isFetching || loading || !getUser) return <Loader />;
-
-    const data = []
+    const tableData = []
 
     for (const coin of getUser.portfolio) {
         const cryptoData = cryptosList?.data?.coins.filter((crypto) => crypto.name.toLowerCase() === coin.name.toLowerCase());
@@ -40,7 +32,7 @@ const MyAccount = () => {
             symbol: cryptoData[0].symbol,
             name: coin.name,
             quantity: coin.quantity,
-            average: coin.averagePrice,
+            average: parseFloat(coin.averagePrice).toFixed(2),
             profitloss: pAndL,
             currentPrice: parseFloat(cryptoData[0].price).toFixed(2),
             "24hrChange": cryptoData[0].change,
@@ -48,7 +40,7 @@ const MyAccount = () => {
             cryptoData,
             coin
         }
-        data.push(temp)
+        tableData.push(temp)
     }
 
       const columns = [
@@ -123,11 +115,12 @@ const MyAccount = () => {
     const accountPage = user ? (
         <Col className="coin-heading-container">
           <Title level={2} className="coin-name">
-            Welcome back, {user.username}
+            Welcome back, {username}
           </Title>
           <p>Head to the Cryptocurrencies tab to find new Coins to Buy</p>
-          <p>{`You currently have $${getUser.cash} in your account`}</p>
-          <Table style={{width: "100%"}} columns={columns} dataSource={data} />
+          <p>{`You currently have $${cash} in your account`}</p>
+          <Table style={{width: "100%"}} columns={columns} dataSource={tableData} />
+          
         </Col>
     ) :
     (
@@ -135,10 +128,11 @@ const MyAccount = () => {
     )
 
   return accountPage
+    }
 };
 
 const FETCH_USER_QUERY = gql `
-  query($userId: String) {
+  query getUser($userId: String) {
   getUser(input: $userId) {
     id
     email
@@ -154,36 +148,5 @@ const FETCH_USER_QUERY = gql `
   }
 }
 `
-const UPDATE_PORTFOLIO_MUTATION = gql `
-        mutation updatePortfolio(
-          $userId: ID!
-          $cash: String
-          $name: String
-          $symbol: String
-          $quantity: String
-          $averagePrice: String
-          ) {
-          updatePortfolio(
-            userId: $userId
-            cash: $cash
-            stockInput: {
-              name: $name
-              symbol: $symbol
-              quantity: $quantity
-              averagePrice: $averagePrice
-            }
-            ) {
-            username
-            cash
-            portfolio {
-              name
-              symbol
-              quantity
-              averagePrice
-            }
-          }
-        }
-      `
-
 
 export default MyAccount;

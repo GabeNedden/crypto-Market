@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import { AuthContext } from '../context/auth';
 import { useMutation } from '@apollo/react-hooks';
 import gql from 'graphql-tag';
-import { Avatar, Button, Col, Drawer, Divider, Form, Input, Radio, Row, Typography } from 'antd';
+import { Button, Col, Drawer, Divider, Form, Input, InputNumber, Modal, Radio, Result, Row, Typography } from 'antd';
 import { useGetCryptoDetailsQuery } from '../services/cryptoApi';
 import {  DollarOutlined, MinusCircleOutlined, PlusCircleOutlined, UserOutlined } from '@ant-design/icons'
 import Loader from './Loader';
@@ -17,11 +17,12 @@ const BuySellDrawer = (props) => {
     const [form] = Form.useForm();
 
     const [ visible, setVisible ] = useState(false);
+    const [ modal, setModal ] = useState(false)
     const onClose = () => setVisible(false);
     
     const [values, setValues] = useState({
-        action: '',
-        price: '',
+        action: props.title,
+        price: props.crypto[0].price,
         quantity: ''
     });
 
@@ -38,11 +39,24 @@ const BuySellDrawer = (props) => {
             symbol: props.portfolio.symbol,
             quantity: values.quantity,
             price: values.price
+        },
+        update(proxy, result ) {
+          const data = proxy.readQuery({
+            query: FETCH_USER_QUERY
+          });
+          proxy.writeQuery({
+            query: FETCH_USER_QUERY,
+            data: {
+              getUser: {result, ...data.getUser}
+            }
+          });
         }
       });
 
       const onSubmit = (e) => {
-        updatePortfolio()
+        updatePortfolio();
+        setVisible(false);
+        setModal(true)
     }
 
   if (isFetching) return <Loader />;
@@ -57,6 +71,28 @@ const BuySellDrawer = (props) => {
 
   return (
     <>
+        <Modal
+          title="Market Order Status"
+          centered
+          visible={modal}
+          onOk={() => window.location.reload()}
+          onCancel={() => window.location.reload()}
+          width={1000}
+          footer={null}
+        >
+          <Result
+            status="success"
+            title={`Successful ${values.action === "Buy" ? "purchase" : "sale"} of ${values.quantity} shares of ${props.portfolio.name}`}
+            subTitle="Order number: 2017182818828182881 Cloud server configuration takes 1-5 minutes, please wait."
+            extra={[
+              <Button type="primary" key="console">
+                Go Console
+              </Button>,
+              <Button key="buy">Buy Again</Button>,
+            ]}
+          />
+        </Modal>
+
         <Button type={props.buttonType} onClick={() => setVisible(true)}>
           {props.title}
         </Button>
@@ -163,8 +199,9 @@ const BuySellDrawer = (props) => {
                         value={values.quantity}
                         onChange={onChange}
                     >
-                    <Input 
+                    <InputNumber 
                         name='quantity'
+                        min={1}
                         addonBefore={values.action === 'Buy' ? <PlusCircleOutlined /> : <MinusCircleOutlined />}
                         style={{width: '100%'}}
                         />
@@ -172,7 +209,7 @@ const BuySellDrawer = (props) => {
 
                     <Form.Item
                         name="cash"
-                        label="Spending $"
+                        label="$ Available"
                     >
                     <Input 
                         addonBefore={<UserOutlined />}
@@ -202,6 +239,24 @@ const BuySellDrawer = (props) => {
       </>
   )
 }
+
+const FETCH_USER_QUERY = gql `
+  query getUser($userId: String) {
+  getUser(input: $userId) {
+    id
+    email
+    createdAt
+    username
+    cash
+    portfolio{
+      name
+      symbol
+      quantity
+      averagePrice
+    }
+  }
+}
+`
 
 const UPDATE_PORTFOLIO_MUTATION = gql `
         mutation updatePortfolio(
