@@ -105,8 +105,8 @@ const MyAccount = () => {
           key: 'action',
           render: (text, record) => (
             <Space size="middle">
-                <BuySellDrawer userDetails={getUser} portfolio={record.coin} crypto={record.cryptoData} title='Buy' buttonType="primary" name={record.name} />
-                <BuySellDrawer userDetails={getUser} portfolio={record.coin} crypto={record.cryptoData} title='Sell' buttonType="" name={record.name} />
+                <BuySellDrawer userDetails={getUser} crypto={record.cryptoData[0]} title='Buy' buttonType="primary" name={record.name} />
+                <BuySellDrawer userDetails={getUser} crypto={record.cryptoData[0]} title='Sell' buttonType="" name={record.name} />
             </Space>
           ),
         },

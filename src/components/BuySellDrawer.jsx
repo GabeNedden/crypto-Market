@@ -10,7 +10,7 @@ import Loader from './Loader';
 const BuySellDrawer = (props) => {
     const { user } = useContext(AuthContext);
     const userId = user.id;
-    const coinId = props.crypto[0].uuid;
+    const coinId = props.crypto.uuid;
     const userDetails = props.userDetails;
     const { data, isFetching } = useGetCryptoDetailsQuery(coinId);
     const cryptoDetails = data?.data?.coin;
@@ -23,7 +23,7 @@ const BuySellDrawer = (props) => {
     
     const [values, setValues] = useState({
         action: props.title,
-        price: props.crypto[0].price,
+        price: props.crypto.price,
         quantity: ''
     });
 
@@ -35,8 +35,8 @@ const BuySellDrawer = (props) => {
         variables: {
             userId: userId,
             action: values.action,
-            name: props.portfolio.name,
-            symbol: props.portfolio.symbol,
+            name: props.crypto.name,
+            symbol: props.crypto.symbol,
             quantity: values.quantity,
             price: values.price
         },
@@ -75,7 +75,7 @@ const BuySellDrawer = (props) => {
         >
           <Result
             status={errors.length > 0 ? 'warning' : 'success'}
-            title={errors.length > 0 ? `${errors}` : `Successful ${values.action === "Buy" ? "purchase" : "sale"} of ${values.quantity} ${values.quantity > 1 ? 'shares' : 'share'} of ${props.portfolio.name}`}
+            title={errors.length > 0 ? `${errors}` : `Successful ${values.action === "Buy" ? "purchase" : "sale"} of ${values.quantity} ${values.quantity > 1 ? 'shares' : 'share'} of ${props.crypto.name}`}
             subTitle="Order number: 2017182818828182881 Keep this order number for your records"
             extra={[
               <Button type="primary" key="console" onClick={() => window.location.reload()}>

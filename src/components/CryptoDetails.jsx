@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
+import { AuthContext } from '../context/auth';
+import gql from 'graphql-tag';
+import { useQuery } from '@apollo/react-hooks';
 import HTMLReactParser from 'html-react-parser';
 import { useParams } from 'react-router-dom';
 import millify from 'millify';
 import { Col, Row, Typography, Select } from 'antd';
+import BuySellDrawer from './BuySellDrawer';
 import { MoneyCollectOutlined, DollarCircleOutlined, FundOutlined, ExclamationCircleOutlined, StopOutlined, TrophyOutlined, CheckOutlined, NumberOutlined, ThunderboltOutlined } from '@ant-design/icons';
 
 import { useGetCryptoDetailsQuery, useGetCryptoHistoryQuery } from '../services/cryptoApi';
@@ -13,15 +17,18 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const CryptoDetails = () => {
+  const { user } = useContext(AuthContext);
+  const userId = user.id;
   const { coinId } = useParams();
   const [timePeriod, setTimePeriod] = useState('7d');
+  const { data: { getUser } = {} } = useQuery(FETCH_USER_QUERY, { variables: { userId }});
   const { data, isFetching } = useGetCryptoDetailsQuery(coinId);
   const { data: coinHistory } = useGetCryptoHistoryQuery({coinId, timePeriod});
   const cryptoDetails = data?.data?.coin;
 
   console.log(cryptoDetails)
 
-  if (isFetching) return <Loader />;
+  if (isFetching || !getUser ) return <Loader />;
 
   const time = ['3h', '24h', '7d', '30d', '1y', '3m', '3y', '5y'];
 
@@ -52,7 +59,11 @@ const CryptoDetails = () => {
       <Select defaultValue="7d" className="select-timeperiod" placeholder="Select Timeperiod" onChange={(value) => setTimePeriod(value)}>
         {time.map((date) => <Option key={date}>{date}</Option>)}
       </Select>
+
       <LineChart coinHistory={coinHistory} currentPrice={millify(cryptoDetails?.price)} coinName={cryptoDetails?.name} />
+      
+      <BuySellDrawer userDetails={getUser} crypto={cryptoDetails} title='Buy' buttonType="primary" name={cryptoDetails?.name} />
+
       <Col className="stats-container">
         <Col className="coin-value-statistics">
           <Col className="coin-value-statistics-heading">
@@ -103,5 +114,23 @@ const CryptoDetails = () => {
     </Col>
   );
 };
+
+const FETCH_USER_QUERY = gql `
+  query getUser($userId: String) {
+  getUser(input: $userId) {
+    id
+    email
+    createdAt
+    username
+    cash
+    portfolio{
+      name
+      symbol
+      quantity
+      averagePrice
+    }
+  }
+}
+`
 
 export default CryptoDetails;
