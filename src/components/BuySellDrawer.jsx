@@ -18,6 +18,7 @@ const BuySellDrawer = (props) => {
 
     const [ visible, setVisible ] = useState(false);
     const [ modal, setModal ] = useState(false)
+    const [ errors, setErrors ] = useState({});
     const onClose = () => setVisible(false);
     
     const [values, setValues] = useState({
@@ -31,6 +32,10 @@ const BuySellDrawer = (props) => {
         console.log(values)
     };
 
+    const handleOk = () => {
+      window.location.reload();
+    }
+
     const [updatePortfolio] = useMutation(UPDATE_PORTFOLIO_MUTATION, {
         variables: {
             userId: userId,
@@ -39,6 +44,9 @@ const BuySellDrawer = (props) => {
             symbol: props.portfolio.symbol,
             quantity: values.quantity,
             price: values.price
+        },
+        onError(err){
+          setErrors(err.graphQLErrors[0].message);
         },
         update(proxy, result ) {
           const data = proxy.readQuery({
@@ -75,21 +83,18 @@ const BuySellDrawer = (props) => {
           title="Market Order Status"
           centered
           visible={modal}
-          onOk={() => window.location.reload()}
           onCancel={() => window.location.reload()}
           width={1000}
-          footer={null}
+          footer={[
+            <Button key="submit" type="primary" loading={isFetching} onClick={handleOk}>
+              Ok
+            </Button>
+          ]}
         >
           <Result
-            status="success"
-            title={`Successful ${values.action === "Buy" ? "purchase" : "sale"} of ${values.quantity} shares of ${props.portfolio.name}`}
-            subTitle="Order number: 2017182818828182881 Cloud server configuration takes 1-5 minutes, please wait."
-            extra={[
-              <Button type="primary" key="console">
-                Go Console
-              </Button>,
-              <Button key="buy">Buy Again</Button>,
-            ]}
+            status={errors ? "warning" : "success"}
+            title={errors ? `${errors}` : `Successful ${values.action === "Buy" ? "purchase" : "sale"} of ${values.quantity} shares of ${props.portfolio.name}`}
+            subTitle={errors ? 'Order Cancelled' : 'Order number: 2017182818828182881 Cloud server configuration takes 1-5 minutes, please wait.'}
           />
         </Modal>
 
