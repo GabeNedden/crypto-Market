@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { AuthContext } from '../context/auth';
 import gql from 'graphql-tag';
 import { useQuery } from '@apollo/react-hooks';
-import { Button, Col, Space, Result, Table, Tag, Typography } from 'antd';
+import { Col, Space, Table, Tag, Typography } from 'antd';
 import BuySellDrawer from './BuySellDrawer';
 
 import Loader from '../components/Loader';

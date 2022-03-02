@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import { AuthContext } from '../context/auth';
 import { useMutation } from '@apollo/react-hooks';
 import gql from 'graphql-tag';
-import { Button, Col, Drawer, Divider, Form, Input, InputNumber, Modal, Radio, Result, Row, Typography } from 'antd';
+import { Button, Col, Drawer, Divider, Form, Input, Modal, Radio, Result, Row, Typography } from 'antd';
 import { useGetCryptoDetailsQuery } from '../services/cryptoApi';
 import {  DollarOutlined, MinusCircleOutlined, PlusCircleOutlined, UserOutlined } from '@ant-design/icons'
 import Loader from './Loader';
@@ -29,12 +29,7 @@ const BuySellDrawer = (props) => {
 
     const onChange = (event) => {
         setValues({...values, [event.target.name]: event.target.value});
-        console.log(values)
     };
-
-    const handleOk = () => {
-      window.location.reload();
-    }
 
     const [updatePortfolio] = useMutation(UPDATE_PORTFOLIO_MUTATION, {
         variables: {
@@ -47,17 +42,7 @@ const BuySellDrawer = (props) => {
         },
         onError(err){
           setErrors(err.graphQLErrors[0].message);
-        },
-        update(proxy, result ) {
-          const data = proxy.readQuery({
-            query: FETCH_USER_QUERY
-          });
-          proxy.writeQuery({
-            query: FETCH_USER_QUERY,
-            data: {
-              getUser: {result, ...data.getUser}
-            }
-          });
+          console.log(errors)
         }
       });
 
@@ -83,18 +68,20 @@ const BuySellDrawer = (props) => {
           title="Market Order Status"
           centered
           visible={modal}
+          onOk={() => window.location.reload()}
           onCancel={() => window.location.reload()}
           width={1000}
-          footer={[
-            <Button key="submit" type="primary" loading={isFetching} onClick={handleOk}>
-              Ok
-            </Button>
-          ]}
+          footer={null}
         >
           <Result
-            status={errors ? "warning" : "success"}
-            title={errors ? `${errors}` : `Successful ${values.action === "Buy" ? "purchase" : "sale"} of ${values.quantity} shares of ${props.portfolio.name}`}
-            subTitle={errors ? 'Order Cancelled' : 'Order number: 2017182818828182881 Cloud server configuration takes 1-5 minutes, please wait.'}
+            status={errors.length > 0 ? 'warning' : 'success'}
+            title={errors.length > 0 ? `${errors}` : `Successful ${values.action === "Buy" ? "purchase" : "sale"} of ${values.quantity} ${values.quantity > 1 ? 'shares' : 'share'} of ${props.portfolio.name}`}
+            subTitle="Order number: 2017182818828182881 Keep this order number for your records"
+            extra={[
+              <Button type="primary" key="console" onClick={() => window.location.reload()}>
+                OK
+              </Button>
+            ]}
           />
         </Modal>
 
@@ -203,10 +190,20 @@ const BuySellDrawer = (props) => {
                         label="Quantity"
                         value={values.quantity}
                         onChange={onChange}
+                        rules={[
+                          { required: true, message: '', whitespace: true },
+                          ({ getFieldValue }) => ({
+                            validator(_, value) {
+                              if ( value > 0) {
+                                return Promise.resolve();
+                              }
+                              return Promise.reject(new Error('Please input quantity greater than 0'));
+                            },
+                          }),
+                        ]}
                     >
-                    <InputNumber 
+                    <Input 
                         name='quantity'
-                        min={1}
                         addonBefore={values.action === 'Buy' ? <PlusCircleOutlined /> : <MinusCircleOutlined />}
                         style={{width: '100%'}}
                         />
@@ -245,23 +242,6 @@ const BuySellDrawer = (props) => {
   )
 }
 
-const FETCH_USER_QUERY = gql `
-  query getUser($userId: String) {
-  getUser(input: $userId) {
-    id
-    email
-    createdAt
-    username
-    cash
-    portfolio{
-      name
-      symbol
-      quantity
-      averagePrice
-    }
-  }
-}
-`
 
 const UPDATE_PORTFOLIO_MUTATION = gql `
         mutation updatePortfolio(
